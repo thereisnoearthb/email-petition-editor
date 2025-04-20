@@ -1,0 +1,93 @@
+body {
+    background-color: white;
+    color: black;
+    padding-bottom: 7rem; /* Increased padding for fixed bottom bar */
+}
+
+.card {
+    margin-bottom: 1.5rem;
+    border: 1px solid #DFD3B9; /* Light accent border */
+}
+
+.card-header {
+     background-color: #DFD3B9; /* Accent color */
+     color: black;
+     font-weight: bold;
+}
+
+/* Primary Button */
+.btn-primary {
+    background-color: #2E4989;
+    border-color: #2E4989;
+    color: white;
+}
+.btn-primary:hover, .btn-primary:focus {
+    background-color: #1e3a75; /* Darker shade */
+    border-color: #1e3a75;
+    color: white;
+}
+
+/* Secondary Button (Add/Remove) */
+.btn-secondary {
+    background-color: #DFD3B9;
+    border-color: #DFD3B9;
+    color: black;
+}
+ .btn-secondary:hover, .btn-secondary:focus {
+    background-color: #c9bfa5; /* Darker shade */
+    border-color: #c9bfa5;
+    color: black;
+ }
+
+/* Danger Button (Remove) */
+.btn-danger {
+    background-color: #dc3545;
+     border-color: #dc3545;
+}
+.btn-danger:hover, .btn-danger:focus {
+     background-color: #bb2d3b;
+     border-color: #b02a37;
+}
+
+textarea {
+    min-height: 80px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+     color: #2E4989; /* Primary color for headings */
+}
+
+label {
+    font-weight: 500;
+}
+
+.fixed-bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #f8f9fa; /* Light grey background */
+    padding: 1rem;
+    border-top: 1px solid #dee2e6; /* Subtle top border */
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1); /* Soft shadow */
+    text-align: center;
+    z-index: 1030; /* Ensure it's above other content */
+}
+
+/* Ensure input groups with remove buttons align nicely */
+.input-group .form-control {
+    flex: 1 1 auto;
+}
+.input-group .btn {
+    flex: 0 0 auto;
+}
+ .input-group textarea.form-control {
+    min-height: 40px; /* Adjust height */
+ }
+ .input-group .btn-danger { /* Specificity for remove button alignment */
+    height: calc(1.5em + .75rem + 2px); /* Match default input height */
+ }
+ .input-group textarea ~ .btn-danger { /* Align remove button with top of textarea */
+     align-self: flex-start;
+     height: auto; /* Reset height if needed */
+ }
