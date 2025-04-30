@@ -29,9 +29,10 @@
                 <div class="mb-3">
                     <label class="form-label">TO Addresses:</label>
                     <div id="toAddressesContainer">
+                        <!-- Initial TO field -->
                         <div class="input-group mb-2">
                             <input type="email" class="form-control to-address" placeholder="to@example.com">
-                            <button class="btn btn-danger btn-sm" type="button" onclick="removeInput(this)">Remove</button>
+                            <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
                         </div>
                     </div>
                     <button class="btn btn-secondary btn-sm" type="button" id="addToProps">
@@ -42,9 +43,10 @@
                 <div class="mb-3">
                     <label class="form-label">CC Addresses:</label>
                     <div id="ccAddressesContainer">
+                         <!-- Initial CC field -->
                          <div class="input-group mb-2">
                             <input type="email" class="form-control cc-address" placeholder="cc@example.com">
-                            <button class="btn btn-danger btn-sm" type="button" onclick="removeInput(this)">Remove</button>
+                            <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
                         </div>
                     </div>
                     <button class="btn btn-secondary btn-sm" type="button" id="addCcProps">
@@ -64,13 +66,14 @@
             <div class="card-body">
                  <label class="form-label">Subject Line Options:</label>
                  <div id="subjectLinesContainer">
+                     <!-- Initial Subject fields -->
                      <div class="input-group mb-2">
                         <input type="text" class="form-control subject-line" placeholder="Subject Option 1">
-                        <button class="btn btn-danger btn-sm" type="button" onclick="removeInput(this)">Remove</button>
+                        <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
                     </div>
                      <div class="input-group mb-2">
                         <input type="text" class="form-control subject-line" placeholder="Subject Option 2">
-                        <button class="btn btn-danger btn-sm" type="button" onclick="removeInput(this)">Remove</button>
+                        <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
                     </div>
                  </div>
                  <button class="btn btn-secondary btn-sm" type="button" id="addSubjectProps">
@@ -85,13 +88,14 @@
                 <div class="mb-3">
                     <label class="form-label">Body Para 1 Options (Introduction):</label>
                     <div id="bodyPara1Container">
+                         <!-- Initial Para 1 fields -->
                          <div class="input-group mb-2">
                             <textarea class="form-control body-para-1" placeholder="Introduction Option 1"></textarea>
-                            <button class="btn btn-danger btn-sm" type="button" onclick="removeInput(this)">Remove</button>
+                            <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
                         </div>
                          <div class="input-group mb-2">
                             <textarea class="form-control body-para-1" placeholder="Introduction Option 2"></textarea>
-                             <button class="btn btn-danger btn-sm" type="button" onclick="removeInput(this)">Remove</button>
+                             <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
                         </div>
                     </div>
                      <button class="btn btn-secondary btn-sm" type="button" id="addPara1Props">
@@ -102,13 +106,14 @@
                 <div class="mb-3">
                     <label class="form-label">Body Para 2 Options (Conflict/Issues):</label>
                     <div id="bodyPara2Container">
+                         <!-- Initial Para 2 fields -->
                          <div class="input-group mb-2">
                             <textarea class="form-control body-para-2" placeholder="Conflict/Issue Option 1"></textarea>
-                             <button class="btn btn-danger btn-sm" type="button" onclick="removeInput(this)">Remove</button>
+                             <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
                         </div>
                         <div class="input-group mb-2">
                             <textarea class="form-control body-para-2" placeholder="Conflict/Issue Option 2"></textarea>
-                            <button class="btn btn-danger btn-sm" type="button" onclick="removeInput(this)">Remove</button>
+                            <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
                         </div>
                     </div>
                     <button class="btn btn-secondary btn-sm" type="button" id="addPara2Props">
@@ -119,13 +124,14 @@
                 <div class="mb-3">
                     <label class="form-label">Body Para 3 Options (Resolution/Call to Action):</label>
                     <div id="bodyPara3Container">
+                        <!-- Initial Para 3 fields -->
                         <div class="input-group mb-2">
                             <textarea class="form-control body-para-3" placeholder="Resolution/CTA Option 1"></textarea>
-                            <button class="btn btn-danger btn-sm" type="button" onclick="removeInput(this)">Remove</button>
+                            <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
                         </div>
                         <div class="input-group mb-2">
                             <textarea class="form-control body-para-3" placeholder="Resolution/CTA Option 2"></textarea>
-                            <button class="btn btn-danger btn-sm" type="button" onclick="removeInput(this)">Remove</button>
+                            <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
                         </div>
                     </div>
                     <button class="btn btn-secondary btn-sm" type="button" id="addPara3Props">
@@ -136,21 +142,22 @@
                  <div class="mb-3">
                     <label class="form-label">Signing Off Options:</label>
                     <div id="signingOffContainer">
+                        <!-- Initial Signoff fields -->
                         <div class="input-group mb-2">
                             <input type="text" class="form-control signing-off" value="Yours Sincerely,">
-                            <button class="btn btn-danger btn-sm" type="button" onclick="removeInput(this)">Remove</button>
+                            <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
                         </div>
                         <div class="input-group mb-2">
                             <input type="text" class="form-control signing-off" value="In Solidarity,">
-                            <button class="btn btn-danger btn-sm" type="button" onclick="removeInput(this)">Remove</button>
+                            <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
                         </div>
                          <div class="input-group mb-2">
                             <input type="text" class="form-control signing-off" value="With hope for justice,">
-                            <button class="btn btn-danger btn-sm" type="button" onclick="removeInput(this)">Remove</button>
+                            <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
                         </div>
                         <div class="input-group mb-2">
                             <input type="text" class="form-control signing-off" value="Regards,">
-                            <button class="btn btn-danger btn-sm" type="button" onclick="removeInput(this)">Remove</button>
+                            <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
                         </div>
                     </div>
                      <button class="btn btn-secondary btn-sm" type="button" id="addSignoffProps">
@@ -160,12 +167,15 @@
             </div>
         </div>
 
+        <!-- Use the fixed bottom bar class -->
         <div class="fixed-bottom-bar">
              <button class="btn btn-primary btn-lg" id="generateButton">
                  <i class="bi bi-download"></i> Generate HTML Files
              </button>
         </div>
-    </div> <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min. js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="script.js"></script>
 </body>
 </html>
