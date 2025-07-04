@@ -1,60 +1,60 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Get non-empty, trimmed values from a collection of inputs
-    function getValuesFromInputs(selector) {
-        return Array.from(document.querySelectorAll(selector))
-                    .map(input => input.value.trim())
-                    .filter(value => value); // Remove empty values
+  // Get non-empty, trimmed values from a collection of inputs
+  function getValuesFromInputs(selector) {
+    return Array.from(document.querySelectorAll(selector))
+      .map(input => input.value.trim())
+      .filter(value => value); // Remove empty values
+  }
+
+  // Add a new input group to a container
+  function addInput(containerId, inputHtml) {
+    const container = document.getElementById(containerId);
+    if (container) {
+      container.insertAdjacentHTML('beforeend', inputHtml);
+    } else {
+      console.error(`Container with ID ${containerId} not found.`);
     }
+  }
 
-    // Add a new input group to a container
-    function addInput(containerId, inputHtml) {
-        const container = document.getElementById(containerId);
-        if (container) {
-            container.insertAdjacentHTML('beforeend', inputHtml);
-        } else {
-            console.error(`Container with ID ${containerId} not found.`);
-        }
+  // Remove the closest parent '.input-group' of a button
+  function removeInput(button) {
+    const inputGroup = button.closest('.input-group');
+    if (inputGroup) {
+      inputGroup.remove();
     }
+  }
 
-    // Remove the closest parent '.input-group' of a button
-    function removeInput(button) {
-        const inputGroup = button.closest('.input-group');
-        if (inputGroup) {
-            inputGroup.remove();
-        }
-    }
+  // Safely escape HTML for display purposes (used in generated file's preview)
+  function escapeHtmlForDisplay(unsafe) {
+    if (typeof unsafe !== 'string') return "";
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 
-    // Safely escape HTML for display purposes (used in generated file's preview)
-    function escapeHtmlForDisplay(unsafe) {
-        if (typeof unsafe !== 'string') return "";
-        return unsafe
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
+  // Trigger file download
+  function downloadFile(filename, content) {
+    const blob = new Blob([content], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a); // Required for Firefox
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url); // Clean up
+  }
 
-    // Trigger file download
-    function downloadFile(filename, content) {
-        const blob = new Blob([content], { type: 'text/html;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a); // Required for Firefox
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url); // Clean up
-    }
+  // --- HTML Generation Function ---
 
-    // --- HTML Generation Function ---
-
-    function generateHtmlContent(platform, data) {
-        // Use JSON.stringify for safe embedding of data into the script block
-        // This handles quotes, newlines, etc. within the data correctly.
-        const jsConstants = `
+  function generateHtmlContent(data) {
+    // Use JSON.stringify for safe embedding of data into the script block
+    // This handles quotes, newlines, etc. within the data correctly.
+    const jsConstants = `
       const TO_ADDRESS = ${JSON.stringify(data.toAddresses.join(','))};
       const CC_ADDRESS = ${JSON.stringify(data.ccAddresses.join(','))};
       const BCC_ADDRESS = ${JSON.stringify(data.bccAddress)};
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const DOUBLE_LINE_BREAK = "\\n\\n";
     `;
 
-        const jsLogic = `
+    const jsLogic = `
       let mailtoLink = "";
       let copyText = ""; // Body only for preview/copy
       let selectedSubject = "";
@@ -117,15 +117,78 @@ document.addEventListener('DOMContentLoaded', () => {
           if (selectedSubject) params.append("subject", selectedSubject);
           if (bodyForMailto) params.append("body", bodyForMailto); // Let URLSearchParams handle encoding \n
 
-          // --- Platform Specific Adjustments (Example for iOS if needed later) ---
+          // Platform Specific Adjustments (Example for iOS if needed later)
           let finalQueryString = params.toString();
-          // if ('${platform}' === 'ios') { // Check the platform variable passed to generateHtmlContent
-              // iOS Mail sometimes prefers %0A over %0D%0A or even %20 for spaces in body
-              // If the standard URLSearchParams encoding causes issues on iOS,
-              // you might need to manually replace encodings here.
-              // Example (use with caution, test thoroughly):
-              // finalQueryString = finalQueryString.replace(/%0D%0A/g, '%0A').replace(/%20/g, '+');
-          // }
+          finalQueryString = finalQueryString.replace(/\\+/g, '%20');
+
+          // Platform Detection
+					const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+					const platformNavigator = navigator.platform || ""; // For OS-level platform string
+
+					let detectedSystem = "Unknown";
+					let mailtoEncodingProfile = "standard"; // Profile to decide encoding: 'ios_specific' or 'standard'
+
+					// iOS Detection Logic
+					// 1. Check navigator.platform for direct iOS device strings (most reliable if available)
+					if (/iPad|iPhone|iPod/.test(platformNavigator)) {
+						detectedSystem = "iOS";
+						mailtoEncodingProfile = "ios_specific";
+					}
+					// 2. Check userAgent for standard iOS device strings
+					else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) { // !window.MSStream helps avoid some Windows Phone false positives
+						detectedSystem = "iOS";
+						mailtoEncodingProfile = "ios_specific";
+					}
+					// 3. Check for "Macintosh" + "Mobile" in userAgent (common for iPads in desktop mode/emulators)
+					else if (/Macintosh/.test(userAgent) && /Mobile/.test(userAgent)) {
+						detectedSystem = "iOS";
+						mailtoEncodingProfile = "ios_specific";
+					}
+					// 4. Check for "Macintosh" userAgent with multi-touch capability (another iPad desktop mode/emulator indicator)
+					else if (/Macintosh/.test(userAgent) && navigator.maxTouchPoints && navigator.maxTouchPoints > 1) {
+						detectedSystem = "iOS";
+						mailtoEncodingProfile = "ios_specific";
+					}
+					// macOS Detection (ensure it's not an iPad already identified above)
+					else if ((/Macintosh/.test(userAgent) || /MacIntel/.test(platformNavigator) || /MacPPC/.test(platformNavigator) || /Mac68K/.test(platformNavigator))) {
+						detectedSystem = "macOS";
+						mailtoEncodingProfile = "standard";
+					}
+					// Android Detection
+					else if (/android/i.test(userAgent)) {
+						detectedSystem = "Android";
+						mailtoEncodingProfile = "standard"; // Android is generally robust
+					}
+					// Windows Detection
+					else if (/Win/.test(platformNavigator)) {
+						detectedSystem = "Windows";
+						mailtoEncodingProfile = "standard";
+					}
+					// Linux Desktop Detection
+					else if (/Linux/.test(platformNavigator) && !/android/i.test(userAgent)) { // Exclude Android's Linux
+						detectedSystem = "Linux";
+						mailtoEncodingProfile = "standard";
+					}
+					// If still "Unknown", it might be a less common OS. 'standard' is a safe default.
+					console.log("Detected System:", detectedSystem);
+					console.log("Using mailto encoding profile:", mailtoEncodingProfile);
+
+					// Apply encoding adjustments based on the profile
+					if (mailtoEncodingProfile === "ios_specific") {
+						console.log("Applying iOS specific mailto link generation strategy.");
+						finalQueryString = finalQueryString.replace(/%0A/g, '%0D%0A');
+						console.log("iOS: Converted newlines from %0A to %0D%0A for better compatibility.");
+					}
+					
+					else if (mailtoEncodingProfile === "standard") {
+						console.log("Applying standard mailto link generation strategy for ", detectedSystem);
+					}
+					// finalQueryString is now potentially adjusted based on the platform.
+
+					if(mailtoLink.length>1998)
+						console.warn("mailto too long for Chrome: " + mailtoLink.length +" chars");
+					else
+						console.log("mailto length OK: "+ mailtoLink.length +" chars");
 
           if (TO_ADDRESS) {
              // Encode TO addresses individually, then join
@@ -260,8 +323,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     `;
 
-        // Construct the full HTML using template literals
-        const fullHtml = `<!DOCTYPE html>
+    // Construct the full HTML using template literals
+    const fullHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -313,117 +376,336 @@ document.addEventListener('DOMContentLoaded', () => {
     </script>
 </body>
 </html>`;
-        return fullHtml;
-    }
+    return fullHtml;
+  }
 
-    // Add Buttons
-    document.getElementById('addToProps')?.addEventListener('click', () => {
-        addInput('toAddressesContainer', `
+  // Add Buttons
+  document.getElementById('addToProps')?.addEventListener('click', () => {
+    addInput('toAddressesContainer', `
             <div class="input-group mb-2">
                 <input type="email" class="form-control to-address" placeholder="another.to@example.com">
                 <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
             </div>`);
-    });
-    document.getElementById('addCcProps')?.addEventListener('click', () => {
-         addInput('ccAddressesContainer', `
+  });
+  document.getElementById('addCcProps')?.addEventListener('click', () => {
+    addInput('ccAddressesContainer', `
             <div class="input-group mb-2">
                 <input type="email" class="form-control cc-address" placeholder="another.cc@example.com">
                 <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
             </div>`);
-    });
-     document.getElementById('addSubjectProps')?.addEventListener('click', () => {
-         addInput('subjectLinesContainer', `
+  });
+  document.getElementById('addSubjectProps')?.addEventListener('click', () => {
+    addInput('subjectLinesContainer', `
             <div class="input-group mb-2">
                 <input type="text" class="form-control subject-line" placeholder="Another Subject Option">
                 <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
             </div>`);
-    });
-     document.getElementById('addPara1Props')?.addEventListener('click', () => {
-         addInput('bodyPara1Container', `
+  });
+  document.getElementById('addPara1Props')?.addEventListener('click', () => {
+    addInput('bodyPara1Container', `
             <div class="input-group mb-2">
                 <textarea class="form-control body-para-1" placeholder="Another Intro Option"></textarea>
                 <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
             </div>`);
-    });
-    document.getElementById('addPara2Props')?.addEventListener('click', () => {
-         addInput('bodyPara2Container', `
+  });
+  document.getElementById('addPara2Props')?.addEventListener('click', () => {
+    addInput('bodyPara2Container', `
             <div class="input-group mb-2">
                 <textarea class="form-control body-para-2" placeholder="Another Conflict/Issue Option"></textarea>
                 <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
             </div>`);
-    });
-    document.getElementById('addPara3Props')?.addEventListener('click', () => {
-         addInput('bodyPara3Container', `
+  });
+  document.getElementById('addPara3Props')?.addEventListener('click', () => {
+    addInput('bodyPara3Container', `
             <div class="input-group mb-2">
                 <textarea class="form-control body-para-3" placeholder="Another Resolution/CTA Option"></textarea>
                 <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
             </div>`);
-    });
-     document.getElementById('addSignoffProps')?.addEventListener('click', () => {
-         addInput('signingOffContainer', `
+  });
+  document.getElementById('addSignoffProps')?.addEventListener('click', () => {
+    addInput('signingOffContainer', `
             <div class="input-group mb-2">
                 <input type="text" class="form-control signing-off" placeholder="Another Signing Off Option">
                 <button class="btn btn-danger btn-sm remove-button" type="button">Remove</button>
             </div>`);
-    });
+  });
 
-    // Remove Buttons (using event delegation on a common ancestor)
-    // Using document.body is simple, but a closer container like '.container' might be slightly more performant
-    document.body.addEventListener('click', (event) => {
-        // Check if the clicked element has the 'remove-button' class
-        if (event.target.classList.contains('remove-button')) {
-            removeInput(event.target);
-        }
-    });
-
-
-    // --- Generate Button Event Listener ---
-    const generateBtn = document.getElementById('generateButton');
-    if (generateBtn) {
-        generateBtn.addEventListener('click', () => {
-            // Collect all data from the form fields
-            const data = {
-                pageTitle: document.getElementById('pageTitle')?.value.trim() || '',
-                toAddresses: getValuesFromInputs('.to-address'),
-                ccAddresses: getValuesFromInputs('.cc-address'),
-                bccAddress: document.getElementById('bccAddress')?.value.trim() || '',
-                subjectLines: getValuesFromInputs('.subject-line'),
-                para1Options: getValuesFromInputs('.body-para-1'),
-                para2Options: getValuesFromInputs('.body-para-2'),
-                para3Options: getValuesFromInputs('.body-para-3'),
-                signingOffOptions: getValuesFromInputs('.signing-off')
-            };
-
-            // Basic validation
-            if (data.toAddresses.length === 0) {
-                alert('Please provide at least one TO address.');
-                return;
-            }
-            if (data.subjectLines.length === 0) {
-                alert('Please provide at least one Subject Line option.');
-                return;
-            }
-            if (data.para1Options.length === 0 || data.para2Options.length === 0 || data.para3Options.length === 0 || data.signingOffOptions.length === 0) {
-                 alert('Please provide at least one option for each body paragraph and the signing off section.');
-                 return;
-            }
-
-            try {
-                // Generate HTML content for both platforms
-                const androidHtml = generateHtmlContent('android', data);
-                const iosHtml = generateHtmlContent('ios', data);
-
-                // Trigger downloads
-                downloadFile('androidmail.html', androidHtml);
-                downloadFile('iphonemail.html', iosHtml);
-
-            } catch (error) {
-                console.error("Error during HTML generation or download:", error);
-                alert("An error occurred while generating the files. Please check the console for details.");
-            }
-        });
-    } else {
-        console.error("Generate button not found!");
+  // Remove Buttons (using event delegation on a common ancestor)
+  document.body.addEventListener('click', (event) => {
+    if (event.target.classList.contains('remove-button')) {
+      removeInput(event.target);
     }
+  });
 
-});
+
+  // --- Generate Button Event Listener ---
+  const generateBtn = document.getElementById('generateButton');
+  if (generateBtn) {
+    generateBtn.addEventListener('click', () => {
+      // Collect all data from the form fields
+      const data = {
+        pageTitle: document.getElementById('pageTitle')?.value.trim() || '',
+        toAddresses: getValuesFromInputs('.to-address'),
+        ccAddresses: getValuesFromInputs('.cc-address'),
+        bccAddress: document.getElementById('bccAddress')?.value.trim() || '',
+        subjectLines: getValuesFromInputs('.subject-line'),
+        para1Options: getValuesFromInputs('.body-para-1'),
+        para2Options: getValuesFromInputs('.body-para-2'),
+        para3Options: getValuesFromInputs('.body-para-3'),
+        signingOffOptions: getValuesFromInputs('.signing-off')
+      };
+
+      // Basic validation
+      if (data.toAddresses.length === 0) {
+        alert('Please provide at least one TO address.');
+        return;
+      }
+      if (data.subjectLines.length === 0) {
+        alert('Please provide at least one Subject Line option.');
+        return;
+      }
+      if (data.para1Options.length === 0 || data.para2Options.length === 0 || data.para3Options.length === 0 || data.signingOffOptions.length === 0) {
+        alert('Please provide at least one option for each body paragraph and the signing off section.');
+        return;
+      }
+
+      try {
+        // Generate HTML content for both platforms
+        const mailHTML = generateHtmlContent(data);
+
+        // Trigger downloads
+        downloadFile('mail.html', mailHTML);
+
+      } catch (error) {
+        console.error("Error during HTML generation or download:", error);
+        alert("An error occurred while generating the files. Please check the console for details.");
+      }
+    });
+  } else {
+    console.error("Generate button not found!");
+  }
+
+  // --- Load Campaign Functionality ---
+  const loadCampaignButton = document.getElementById('loadCampaignButton');
+  const campaignFileInput = document.getElementById('campaignFile');
+
+  if (loadCampaignButton && campaignFileInput) {
+    loadCampaignButton.addEventListener('click', () => {
+      const file = campaignFileInput.files[0];
+      if (file) {
+        if (file.type === "text/html") {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const htmlContent = e.target.result;
+              parseAndPopulateEditor(htmlContent);
+              alert("Campaign data loaded successfully from file!");
+              campaignFileInput.value = ''; // Reset file input
+            } catch (error) {
+              console.error("Error processing campaign file:", error);
+              alert(`Error processing file: ${error.message}`);
+            }
+          };
+          reader.onerror = () => {
+            console.error("Error reading file:", reader.error);
+            alert("Error reading file. See console for details.");
+          };
+          reader.readAsText(file);
+        } else {
+          alert("Please select an HTML file (.html or .htm).");
+          campaignFileInput.value = ''; // Reset file input
+        }
+      } else {
+        alert("Please select a file to load.");
+      }
+    });
+  }
+}); // End of DOMContentLoaded
+
+// --- Helper functions for parsing and populating editor from uploaded file ---
+
+function parseAndPopulateEditor(htmlString) {
+  console.log("Starting to parse HTML content...");
+
+  const pageTitle = extractPageTitle(htmlString);
+  const pageTitleInput = document.getElementById('pageTitle');
+  if (pageTitleInput) {
+    pageTitleInput.value = pageTitle || "Email petition";
+  } else {
+    console.warn("Page title input field 'pageTitle' not found.");
+  }
+
+  const scriptContent = extractScriptContent(htmlString);
+  if (!scriptContent) {
+    alert("Could not find the embedded campaign script data in the HTML file. Form population may be incomplete.");
+    console.warn("Embedded script content not found. Cannot populate most fields.");
+    return;
+  }
+  console.log("Extracted script content snippet:", scriptContent.substring(0, 200) + "...");
+
+  const toAddressesStr = extractConstString(scriptContent, 'TO_ADDRESS');
+  const toAddresses = toAddressesStr ? toAddressesStr.split(',').map(s => s.trim()).filter(s => s) : [];
+  populateDynamicFields('toAddressesContainer', 'to-address', toAddresses, 'email', 'TO Address');
+
+  const ccAddressesStr = extractConstString(scriptContent, 'CC_ADDRESS');
+  const ccAddresses = ccAddressesStr ? ccAddressesStr.split(',').map(s => s.trim()).filter(s => s) : [];
+  populateDynamicFields('ccAddressesContainer', 'cc-address', ccAddresses, 'email', 'CC Address');
+
+  const bccAddress = extractConstString(scriptContent, 'BCC_ADDRESS');
+  const bccAddressInput = document.getElementById('bccAddress');
+  if (bccAddressInput) {
+    bccAddressInput.value = bccAddress;
+  } else {
+    console.warn("BCC address input field 'bccAddress' not found.");
+  }
+
+  const subjectLines = extractConstArray(scriptContent, 'SUBJECT_LINES');
+  populateDynamicFields('subjectLinesContainer', 'subject-line', subjectLines, 'text', 'Subject Option');
+
+  const para1Options = extractConstArray(scriptContent, 'PARA1_OPTIONS');
+  populateDynamicFields('bodyPara1Container', 'body-para-1', para1Options, 'textarea', 'Introduction Option');
+
+  const para2Options = extractConstArray(scriptContent, 'PARA2_OPTIONS');
+  populateDynamicFields('bodyPara2Container', 'body-para-2', para2Options, 'textarea', 'Conflict/Issue Option');
+
+  const para3Options = extractConstArray(scriptContent, 'PARA3_OPTIONS');
+  populateDynamicFields('bodyPara3Container', 'body-para-3', para3Options, 'textarea', 'Resolution/CTA Option');
+
+  const signingOffOptions = extractConstArray(scriptContent, 'SIGNING_OFF_OPTIONS');
+  populateDynamicFields('signingOffContainer', 'signing-off', signingOffOptions, 'text', 'Signing Off Option');
+
+  console.log("Editor population complete.");
+}
+
+function extractPageTitle(htmlString) {
+  const titleMatch = htmlString.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if (titleMatch && titleMatch[1]) {
+    return titleMatch[1].trim();
+  }
+  console.warn("Page title not found in the uploaded HTML.");
+  return "";
+}
+
+function extractScriptContent(htmlString) {
+  const scriptStartMarker = "// --- Embedded Mail Generation Script START ---";
+  const scriptEndMarker = "// --- Embedded Mail Generation Script END ---";
+
+  const startIndex = htmlString.indexOf(scriptStartMarker);
+  if (startIndex === -1) {
+    console.warn("Campaign script start marker not found in HTML content.");
+    return null;
+  }
+
+  const endIndex = htmlString.indexOf(scriptEndMarker, startIndex + scriptStartMarker.length);
+  if (endIndex === -1) {
+    console.warn("Campaign script end marker not found in HTML content.");
+    return null;
+  }
+  return htmlString.substring(startIndex + scriptStartMarker.length, endIndex);
+}
+
+function extractConstString(scriptContent, varName) {
+  const regex = new RegExp(`const\\s+${varName}\\s*=\\s*"([^"]*)"(?:\\s*;)?`, 'm');
+  const match = scriptContent.match(regex);
+  if (match && typeof match[1] === 'string') {
+    return match[1];
+  }
+  const singleQuoteRegex = new RegExp(`const\\s+${varName}\\s*=\\s*'([^']*)'(?:\\s*;)?`, 'm');
+  const singleMatch = scriptContent.match(singleQuoteRegex);
+  if (singleMatch && typeof singleMatch[1] === 'string') {
+    return singleMatch[1];
+  }
+  console.warn(`String const ${varName} not found or malformed in script content.`);
+  return "";
+}
+
+function extractConstArray(scriptContent, varName) {
+  const regex = new RegExp(`const\\s+${varName}\\s*=\\s*(\\[(?:.|\\n|\\r)*?\\])(?:\\s*;)?`, 'm');
+  const match = scriptContent.match(regex);
+  if (match && match[1]) {
+    try {
+      // Attempt to parse as JSON. This is robust for arrays of strings.
+      // For arrays that might contain non-string literals (though not expected from your templates),
+      // a more complex parser or eval (with caution) might be needed.
+      // Given your template structure, JSON.parse should be safe and effective.
+      const arrayValue = JSON.parse(match[1]);
+      if (Array.isArray(arrayValue)) {
+        return arrayValue.map(item => String(item)); // Ensure all items are strings
+      }
+      console.warn(`Parsed value for ${varName} is not an array:`, arrayValue);
+      return [];
+    } catch (e) {
+      console.error(`Error parsing array for ${varName} from content: ${match[1]}. Error: ${e.message}`);
+      // Fallback for simple string arrays that might not be perfect JSON (e.g. trailing comma if not careful)
+      // This is a more lenient fallback, but JSON.parse is preferred.
+      try {
+        const lenientMatch = match[1].replace(/^\[|\]$/g, '').split(',')
+          .map(s => s.trim().replace(/^["']|["']$/g, '')); // Remove quotes and trim
+        if (lenientMatch.length > 0 && lenientMatch[0] !== "") return lenientMatch.map(String);
+      } catch (fallbackError) {
+        console.error(`Fallback parsing also failed for ${varName}: ${fallbackError.message}`);
+      }
+      return [];
+    }
+  }
+  console.warn(`Array const ${varName} not found or malformed in script content.`);
+  return [];
+}
+
+function populateDynamicFields(containerId, inputClass, values, fieldType, placeholderPrefix) {
+  const container = document.getElementById(containerId);
+  if (!container) {
+    console.warn(`Container with ID '${containerId}' not found. Cannot populate fields.`);
+    return;
+  }
+
+  while (container.firstChild) {
+    container.removeChild(container.firstChild);
+  }
+
+  if (values && values.length > 0) {
+    values.forEach((value, index) => {
+      const placeholder = `${placeholderPrefix} ${index + 1}`;
+      createAndAddFieldToContainer(container, fieldType, inputClass, placeholder, value);
+    });
+  } else {
+    console.log(`No values provided for ${containerId}; container is now empty.`);
+    // Optionally, add a default blank field if the list is empty after loading
+    // For example, for TO addresses or Subject lines, you might want at least one field.
+    // if (containerId === 'toAddressesContainer' || containerId === 'subjectLinesContainer') {
+    //     createAndAddFieldToContainer(container, fieldType, inputClass, `${placeholderPrefix} 1`, '');
+    // }
+  }
+}
+
+function createAndAddFieldToContainer(container, fieldType, inputClass, placeholder, value) {
+  const inputGroup = document.createElement('div');
+  inputGroup.className = 'input-group mb-2';
+
+  let field;
+  if (fieldType === 'textarea') {
+    field = document.createElement('textarea');
+    field.placeholder = placeholder;
+    field.rows = 2;
+  } else {
+    field = document.createElement('input');
+    field.type = fieldType;
+    field.placeholder = placeholder;
+  }
+  field.className = `form-control ${inputClass}`;
+  field.value = value || '';
+
+  const removeButton = document.createElement('button');
+  removeButton.className = 'btn btn-danger btn-sm remove-button';
+  removeButton.type = 'button';
+  removeButton.textContent = 'Remove';
+  // The global event listener for '.remove-button' will handle this,
+  // so no need to add an individual listener here if using event delegation.
+  // removeButton.addEventListener('click', () => {
+  //     inputGroup.remove();
+  // });
+
+  inputGroup.appendChild(field);
+  inputGroup.appendChild(removeButton);
+  container.appendChild(inputGroup);
+}
