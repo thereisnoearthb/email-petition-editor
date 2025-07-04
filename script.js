@@ -320,6 +320,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Initial preparation on load
         prepareMail();
+
+        // Automatically redirect to a mail app
+        const sendLink = document.getElementById("send");
+        if (sendLink && !sendLink.classList.contains("disabled")) {
+          window.location.href = sendLink.href;
+        }
       });
     `;
 
