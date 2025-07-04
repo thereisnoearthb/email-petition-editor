@@ -348,7 +348,9 @@ document.addEventListener('DOMContentLoaded', () => {
 <body>
     <div class="container">
       <h5 class="mb-3 text-center">Email Preview & Actions</h5>
-      <p class="text-center text-muted small">Hover over "Send Mail" to see the link. If your email app doesn't open correctly, please use the copy button.</p>
+      <p class="text-center text-muted small">Clicking on 'Send Mail' will open your email app.
+        <br>
+         If your email app doesn't open correctly, please use the copy button.</p>
       <div class="text-center mb-4">
         <a id="send" href="#" target="_blank" class="btn btn-custom-primary btn-lg me-2 disabled" role="button" title="Generating link...">
           <i class="bi bi-send"></i> Send Mail
